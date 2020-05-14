@@ -24,7 +24,7 @@ jobs:
     - name: Run asciidoctor
       uses: Analog-inc/asciidoctor-action@master
       with:
-        shellCommand: "asciidoctor doc/*.adoc -D out"
+        shellCommand: "asciidoctor doc/index.adoc doc/**/index.adoc -R doc/ -D out"
     
     - name: Copy resources
       run:

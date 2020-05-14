@@ -5,13 +5,4 @@
 :sectinks:
 :chapter-label:
 
-= technote
-
-== Spring Boot
-
-link:spring-boot[Spring Boot]
-
-== Kubernetes
-
-
-== AWS
+= technote - Spring Boot
