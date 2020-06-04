@@ -6,3 +6,24 @@
 :chapter-label:
 
 = technote - Spring Boot
+
+
+== Logback
+
+* Stack Traceを1行に出力させる
+* Spring Bootのログ出力を設定する
+* ログの出力形式をjsonにする
+* ログの出力形式をltsvにする
+* プロファイルごとにログの設定を変える
+* パッケージごとにログの出力レベルを変える
+* アクセスログを出力する
+* MDCを出力する
+
+* link:http://logback.qos.ch/manual/layouts_ja.html#ClassicPatternLayout[第6章 レイアウト]
+* link:https://qiita.com/opengl-8080/items/49719f2d35171f017aa9[Logback 使い方メモ - Qiita]
+* link:https://qiita.com/roundrop@github/items/8989b7f29d70f618e503[logback で出すログを強制的に１行にして収集しやすく・運用しやすくする - Qiita]
+* link:https://github.com/roundrop/logback-oneline-converter[roundrop/logback-oneline-converter: A custom logback converter which outputs each log with in line forcely]
+* link:https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#core-properties[Spring Boot Reference Documentation]
+
+== トラブルシューティング
+
