@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 2.0.10">
-<title>technote</title>
+<title>technote - asciidoc</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
@@ -438,44 +438,66 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body class="article toc2 toc-left">
 <div id="header">
-<h1>technote</h1>
+<h1>technote - asciidoc</h1>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
-<li><a href="#_spring_boot">1. Spring Boot</a></li>
-<li><a href="#_kubernetes">2. Kubernetes</a></li>
-<li><a href="#_aws">3. AWS</a></li>
-<li><a href="#_asciidoc">4. asciidoc</a></li>
+<li><a href="#_asciidocで書いたドキュメントをgithub_pagesで公開する">1. asciidocで書いたドキュメントをGitHub Pagesで公開する</a></li>
+<li><a href="#_asciidocをmavenでビルドする">2. asciidocをmavenでビルドする</a></li>
 </ul>
 </div>
 </div>
 <div id="content">
 <div class="sect1">
-<h2 id="_spring_boot"><a class="anchor" href="#_spring_boot"></a>1. Spring Boot</h2>
+<h2 id="_asciidocで書いたドキュメントをgithub_pagesで公開する"><a class="anchor" href="#_asciidocで書いたドキュメントをgithub_pagesで公開する"></a>1. asciidocで書いたドキュメントをGitHub Pagesで公開する</h2>
 <div class="sectionbody">
-<div class="paragraph">
-<p><a href="spring-boot">Spring Boot</a></p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-yaml" data-lang="yaml"># This is a basic workflow to help you get started with Actions
+
+name: CI
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events but only for the master branch
+on:
+  push:
+    branches: [ master ]
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+    - uses: actions/checkout@v2
+
+    # Runs a single command using the runners shell
+    - name: Run asciidoctor
+      uses: Analog-inc/asciidoctor-action@master
+      with:
+        shellCommand: "asciidoctor doc/index.adoc doc/**/index.adoc -R doc/ -D out"
+
+    - name: Copy resources
+      run:
+        sudo cp -r doc/images out/
+
+    - name: Publish gh-pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: out</code></pre>
+</div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_kubernetes"><a class="anchor" href="#_kubernetes"></a>2. Kubernetes</h2>
+<h2 id="_asciidocをmavenでビルドする"><a class="anchor" href="#_asciidocをmavenでビルドする"></a>2. asciidocをmavenでビルドする</h2>
 <div class="sectionbody">
 
-</div>
-</div>
-<div class="sect1">
-<h2 id="_aws"><a class="anchor" href="#_aws"></a>3. AWS</h2>
-<div class="sectionbody">
-
-</div>
-</div>
-<div class="sect1">
-<h2 id="_asciidoc"><a class="anchor" href="#_asciidoc"></a>4. asciidoc</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p><a href="asciidoc">asciidoc</a></p>
-</div>
 </div>
 </div>
 </div>
