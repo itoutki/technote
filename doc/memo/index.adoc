@@ -1,0 +1,16 @@
+:toc: left
+:toctitle: 目次
+:sectnums:
+:sectanchors:
+:sectinks:
+:chapter-label:
+
+= technote - memo
+
+== TODO
+
+* ログイン後にロールを変更できるようなシステムの設計・実装
+* 別ユーザがロールを変更できるようなシステムの設計・実装
+* Spring Bootにおける標準的なセキュリティ対策の実装方針
+* Spring Bootにおけるエラーハンドリング、ロギング、監視の実装方針
+* Spring Bootにおけるセッションタイムアウトの検知
