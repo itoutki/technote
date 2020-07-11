@@ -14,3 +14,44 @@
 * Spring Bootにおける標準的なセキュリティ対策の実装方針
 * Spring Bootにおけるエラーハンドリング、ロギング、監視の実装方針
 * Spring Bootにおけるセッションタイムアウトの検知
+* R2DBCの検証
+** コネクションプール有無
+** トランザクションサポート
+** ドライバクラス
+** 楽観ロックサポート
+** ページング
+** SELECT・UPDATE・DELETEの条件の動的変更
+** 性能テスト
+*** MVC + JDBC
+*** WebFlux + R2DBC
+*** WebFlux + R2DBC + Pool
+
+
+== locust
+
+
+[source, python]
+.locustfile.py
+----
+import random
+from locust import HttpUser, task, between
+
+class QuickstartUser(HttpUser):
+    wait_time = between(5, 9)
+
+    @task
+    def index_page(self):
+        self.client.get("/get")
+
+    @task(3)
+    def delay(self):
+        self.client.get("/delay/1")
+----
+
+[source]
+----
+docker run --rm --name locust_test -p 8089:8089 -v $PWD:/mnt/locust locustio/locust:latest -f /mnt/locust/locustfile.py
+----
+
+* link:https://locust.io/[Locust - A modern load testing framework]
+* link:https://docs.locust.io/en/stable/index.html[Locust Documentation — Locust 1.1.1 documentation]
