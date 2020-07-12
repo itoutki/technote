@@ -444,6 +444,8 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <ul class="sectlevel1">
 <li><a href="#_todo">1. TODO</a></li>
 <li><a href="#_locust">2. locust</a></li>
+<li><a href="#_private_subnetでecrからecsタスクを起動する">3. Private SubnetでECRからECSタスクを起動する</a></li>
+<li><a href="#_ec2_aamazon_linux_2_初期設定">4. EC2 (Aamazon Linux 2) 初期設定</a></li>
 </ul>
 </div>
 </div>
@@ -551,10 +553,164 @@ class QuickstartUser(HttpUser):
 </div>
 </div>
 </div>
+<div class="sect1">
+<h2 id="_private_subnetでecrからecsタスクを起動する"><a class="anchor" href="#_private_subnetでecrからecsタスクを起動する"></a>3. Private SubnetでECRからECSタスクを起動する</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>VPCエンドポイントを作成する</p>
+<div class="ulist">
+<ul>
+<li>
+<p>com.amazonaws.ap-northeast-1.ecr.api</p>
+</li>
+<li>
+<p>com.amazonaws.ap-northeast-1.ecr.dkr</p>
+</li>
+<li>
+<p>com.amazonaws.ap-northeast-1.logs</p>
+</li>
+<li>
+<p>com.amazonaws.ap-northeast-1.s3</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">エンドポイント</th>
+<th class="tableblock halign-left valign-top">ECS on EC2</th>
+<th class="tableblock halign-left valign-top">ECS on Fargate (~1.3.0)</th>
+<th class="tableblock halign-left valign-top">ECS on Fargate (1.4.0~)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">com.amazonaws.ap-northeast-1.ecr.dkr</p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">必要</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">必要</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">com.amazonaws.ap-northeast-1.ecr.api</p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">不要</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">必要</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">com.amazonaws.ap-northeast-1.s3</p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">必要</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">必要</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">com.amazonaws.ap-northeast-1.logs</p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">awslogsログドライバー使用時に必要</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">awslogsログドライバー使用時に必要</p></td>
+</tr>
+</tbody>
+</table>
+<div class="ulist">
+<ul>
+<li>
+<p>VPCエンドポイント（インタフェース）の作成に必要なもの</p>
+<div class="ulist">
+<ul>
+<li>
+<p>VPC</p>
+</li>
+<li>
+<p>サブネット（アベイラビリティーゾーンにつき1つ）</p>
+</li>
+<li>
+<p>セキュリティグループ</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>VPCエンドポイント（ゲートウェイ）の作成に必要なもの</p>
+<div class="ulist">
+<ul>
+<li>
+<p>VPC</p>
+</li>
+<li>
+<p>ルートテーブル（ルートが追加される）</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>ポイント</p>
+<div class="ulist">
+<ul>
+<li>
+<p>元のサービスと同じホスト名でアクセスできるようにするため、プライベートDNS名を有効にする必要がある</p>
+<div class="ulist">
+<ul>
+<li>
+<p>VPCのプライベートDNS解決、DNSホスト名設定を有効にする</p>
+</li>
+<li>
+<p>VPCエンドポイントのプライベートDNS名設定を有効にする</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>エンドポイントにアクセスできるように、エンドポイントに設定するセキュリティグループで443ポートを公開する必要がある</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><a href="https://docs.aws.amazon.com/ja_jp/AmazonECR/latest/userguide/vpc-endpoints.html">Amazon ECR インターフェイス VPC エンドポイント (AWS PrivateLink) - Amazon ECR</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ec2_aamazon_linux_2_初期設定"><a class="anchor" href="#_ec2_aamazon_linux_2_初期設定"></a>4. EC2 (Aamazon Linux 2) 初期設定</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-bash" data-lang="bash"># upgrade package
+sudo yum upgrade
+
+# install docker, git
+sudo yum install -y docker git
+
+# enable docker
+sudo systemctl start docker
+sudo systemctl enable docker
+
+# add ec2-user to docker group for executing command without sudo
+sudo usermod -a -G docker ec2-user
+
+# install docker-compose
+sudo curl -L "https://github.com/docker/compose/releases/download/1.26.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose</code></pre>
+</div>
+</div>
+</div>
+</div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-07-11 08:11:48 UTC
+Last updated 2020-07-12 01:41:13 UTC
 </div>
 </div>
 </body>
