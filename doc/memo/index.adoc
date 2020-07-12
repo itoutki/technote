@@ -55,3 +55,62 @@ docker run --rm --name locust_test -p 8089:8089 -v $PWD:/mnt/locust locustio/loc
 
 * link:https://locust.io/[Locust - A modern load testing framework]
 * link:https://docs.locust.io/en/stable/index.html[Locust Documentation — Locust 1.1.1 documentation]
+
+
+== Private SubnetでECRからECSタスクを起動する
+
+* VPCエンドポイントを作成する
+** com.amazonaws.ap-northeast-1.ecr.api
+** com.amazonaws.ap-northeast-1.ecr.dkr
+** com.amazonaws.ap-northeast-1.logs
+** com.amazonaws.ap-northeast-1.s3
+
+|===
+|エンドポイント | ECS on EC2 | ECS on Fargate (~1.3.0) | ECS on Fargate (1.4.0~)
+
+|com.amazonaws.ap-northeast-1.ecr.dkr | | 必要 | 必要
+|com.amazonaws.ap-northeast-1.ecr.api | | 不要 | 必要
+|com.amazonaws.ap-northeast-1.s3      | | 必要 | 必要
+|com.amazonaws.ap-northeast-1.logs    | | awslogsログドライバー使用時に必要 | awslogsログドライバー使用時に必要
+
+|===
+
+* VPCエンドポイント（インタフェース）の作成に必要なもの
+** VPC
+** サブネット（アベイラビリティーゾーンにつき1つ）
+** セキュリティグループ
+
+* VPCエンドポイント（ゲートウェイ）の作成に必要なもの
+** VPC
+** ルートテーブル（ルートが追加される）
+
+* ポイント
+** 元のサービスと同じホスト名でアクセスできるようにするため、プライベートDNS名を有効にする必要がある
+*** VPCのプライベートDNS解決、DNSホスト名設定を有効にする
+*** VPCエンドポイントのプライベートDNS名設定を有効にする
+** エンドポイントにアクセスできるように、エンドポイントに設定するセキュリティグループで443ポートを公開する必要がある
+
+
+* link:https://docs.aws.amazon.com/ja_jp/AmazonECR/latest/userguide/vpc-endpoints.html[Amazon ECR インターフェイス VPC エンドポイント (AWS PrivateLink) - Amazon ECR]
+
+== EC2 (Aamazon Linux 2) 初期設定
+
+[source, bash]
+----
+# upgrade package
+sudo yum upgrade
+
+# install docker, git
+sudo yum install -y docker git
+
+# enable docker
+sudo systemctl start docker
+sudo systemctl enable docker
+
+# add ec2-user to docker group for executing command without sudo
+sudo usermod -a -G docker ec2-user
+
+# install docker-compose
+sudo curl -L "https://github.com/docker/compose/releases/download/1.26.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+----
