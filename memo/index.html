@@ -446,6 +446,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_locust">2. locust</a></li>
 <li><a href="#_private_subnetでecrからecsタスクを起動する">3. Private SubnetでECRからECSタスクを起動する</a></li>
 <li><a href="#_ec2_aamazon_linux_2_初期設定">4. EC2 (Aamazon Linux 2) 初期設定</a></li>
+<li><a href="#_jdbctemplate_mysql">5. JdbcTemplate + MySQL</a></li>
 </ul>
 </div>
 </div>
@@ -485,6 +486,9 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </li>
 <li>
 <p>楽観ロックサポート</p>
+</li>
+<li>
+<p>クエリのバッチ実行（+binding）</p>
 </li>
 <li>
 <p>ページング</p>
@@ -672,6 +676,12 @@ class QuickstartUser(HttpUser):
 <li>
 <p>エンドポイントにアクセスできるように、エンドポイントに設定するセキュリティグループで443ポートを公開する必要がある</p>
 </li>
+<li>
+<p>s3向けのVPCエンドポイントを設定すると、VPCエンドポイントに紐づけられたルートテーブルが設定されたサブネット内では`yum update`が通らなくなる</p>
+</li>
+<li>
+<p>これは、リポジトリがs3上にあるためで、s3向けのVPCエンドポイントのポリシーでリポジトリのリソースへの許可が必要</p>
+</li>
 </ul>
 </div>
 </li>
@@ -707,10 +717,37 @@ sudo chmod +x /usr/local/bin/docker-compose</code></pre>
 </div>
 </div>
 </div>
+<div class="sect1">
+<h2 id="_jdbctemplate_mysql"><a class="anchor" href="#_jdbctemplate_mysql"></a>5. JdbcTemplate + MySQL</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-boot-starter-jdbc&lt;/artifactId&gt;
+&lt;/dependency&gt;
+&lt;dependency&gt;
+    &lt;groupId&gt;mysql&lt;/groupId&gt;
+    &lt;artifactId&gt;mysql-connector-java&lt;/artifactId&gt;
+&lt;/dependency&gt;</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">private JdbcTemplate jdbcTemplate;
+
+public List&lt;Person&gt; select() {
+    RowMapper&lt;Person&gt; personRowMapper = new BeanPropertyRowMapper&lt;&gt;(Person.class);
+    return jdbcTemplate.query("SELECT * FROM PERSON", personRowMapper);
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-07-12 01:41:13 UTC
+Last updated 2020-07-14 14:13:40 UTC
 </div>
 </div>
 </body>
