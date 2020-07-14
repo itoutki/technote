@@ -19,6 +19,7 @@
 ** トランザクションサポート
 ** ドライバクラス
 ** 楽観ロックサポート
+** クエリのバッチ実行（+binding）
 ** ページング
 ** SELECT・UPDATE・DELETEの条件の動的変更
 ** 性能テスト
@@ -89,7 +90,8 @@ docker run --rm --name locust_test -p 8089:8089 -v $PWD:/mnt/locust locustio/loc
 *** VPCのプライベートDNS解決、DNSホスト名設定を有効にする
 *** VPCエンドポイントのプライベートDNS名設定を有効にする
 ** エンドポイントにアクセスできるように、エンドポイントに設定するセキュリティグループで443ポートを公開する必要がある
-
+** s3向けのVPCエンドポイントを設定すると、VPCエンドポイントに紐づけられたルートテーブルが設定されたサブネット内では`yum update`が通らなくなる
+** これは、リポジトリがs3上にあるためで、s3向けのVPCエンドポイントのポリシーでリポジトリのリソースへの許可が必要
 
 * link:https://docs.aws.amazon.com/ja_jp/AmazonECR/latest/userguide/vpc-endpoints.html[Amazon ECR インターフェイス VPC エンドポイント (AWS PrivateLink) - Amazon ECR]
 
@@ -113,4 +115,29 @@ sudo usermod -a -G docker ec2-user
 # install docker-compose
 sudo curl -L "https://github.com/docker/compose/releases/download/1.26.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 sudo chmod +x /usr/local/bin/docker-compose
+----
+
+== JdbcTemplate + MySQL
+
+[source,xml]
+----
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-jdbc</artifactId>
+</dependency>
+<dependency>
+    <groupId>mysql</groupId>
+    <artifactId>mysql-connector-java</artifactId>
+</dependency>
+----
+
+[source, java]
+----
+private JdbcTemplate jdbcTemplate;
+
+public List<Person> select() {
+    RowMapper<Person> personRowMapper = new BeanPropertyRowMapper<>(Person.class);
+    return jdbcTemplate.query("SELECT * FROM PERSON", personRowMapper);
+}
+
 ----
