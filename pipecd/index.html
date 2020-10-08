@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 2.0.10">
-<title>technote - memo</title>
+<title>Technote - PipeCD</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
@@ -438,308 +438,409 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body class="article toc2 toc-left">
 <div id="header">
-<h1>technote - memo</h1>
+<h1>Technote - PipeCD</h1>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
-<li><a href="#_todo">1. TODO</a></li>
-<li><a href="#_locust">2. locust</a></li>
-<li><a href="#_private_subnetでecrからecsタスクを起動する">3. Private SubnetでECRからECSタスクを起動する</a></li>
-<li><a href="#_ec2_aamazon_linux_2_初期設定">4. EC2 (Aamazon Linux 2) 初期設定</a></li>
-<li><a href="#_jdbctemplate_mysql">5. JdbcTemplate + MySQL</a></li>
+<li><a href="#_pipecdのquickstartやってみた">1. PipeCDのquickstartやってみた</a>
+<ul class="sectlevel2">
+<li><a href="#_exampleリポジトリのfork">1.1. Exampleリポジトリのfork</a></li>
+<li><a href="#_control_planeのインストール">1.2. Control Planeのインストール</a></li>
+<li><a href="#_environmentの作成">1.3. Environmentの作成</a></li>
+<li><a href="#_pipedのインストール">1.4. Pipedのインストール</a></li>
+<li><a href="#_applicationの登録">1.5. Applicationの登録</a></li>
+<li><a href="#_デプロイ">1.6. デプロイ</a></li>
+<li><a href="#_まとめ">1.7. まとめ</a></li>
+</ul>
+</li>
 </ul>
 </div>
 </div>
 <div id="content">
 <div class="sect1">
-<h2 id="_todo"><a class="anchor" href="#_todo"></a>1. TODO</h2>
+<h2 id="_pipecdのquickstartやってみた"><a class="anchor" href="#_pipecdのquickstartやってみた"></a>1. PipeCDのquickstartやってみた</h2>
 <div class="sectionbody">
+<div class="paragraph">
+<p>新しいGitOpsのCDツール、PipeCDが公開されたので、quickstartをやってみた。<br>
+quickstartの手順については以下のページを参照している。</p>
+</div>
 <div class="ulist">
 <ul>
 <li>
-<p>ログイン後にロールを変更できるようなシステムの設計・実装</p>
-</li>
-<li>
-<p>別ユーザがロールを変更できるようなシステムの設計・実装</p>
-</li>
-<li>
-<p>Spring Bootにおける標準的なセキュリティ対策の実装方針</p>
-</li>
-<li>
-<p>Spring Bootにおけるエラーハンドリング、ロギング、監視の実装方針</p>
-</li>
-<li>
-<p>Spring Bootにおけるセッションタイムアウトの検知</p>
-</li>
-<li>
-<p>R2DBCの検証</p>
-<div class="ulist">
-<ul>
-<li>
-<p>コネクションプール有無</p>
-</li>
-<li>
-<p>トランザクションサポート</p>
-</li>
-<li>
-<p>ドライバクラス</p>
-</li>
-<li>
-<p>楽観ロックサポート</p>
-</li>
-<li>
-<p>クエリのバッチ実行（+binding）</p>
-</li>
-<li>
-<p>ページング</p>
-</li>
-<li>
-<p>SELECT・UPDATE・DELETEの条件の動的変更</p>
-</li>
-<li>
-<p>性能テスト</p>
-<div class="ulist">
-<ul>
-<li>
-<p>MVC + JDBC</p>
-</li>
-<li>
-<p>WebFlux + R2DBC</p>
-</li>
-<li>
-<p>WebFlux + R2DBC + Pool</p>
+<p><a href="https://pipecd.dev/docs/quickstart/">Quickstart | PipeCD</a></p>
 </li>
 </ul>
 </div>
-</li>
-</ul>
+<div class="sect2">
+<h3 id="_exampleリポジトリのfork"><a class="anchor" href="#_exampleリポジトリのfork"></a>1.1. Exampleリポジトリのfork</h3>
+<div class="paragraph">
+<p>まずはじめに、Exampleリポジトリを自身のアカウントにforkしておく。</p>
 </div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://github.com/pipe-cd/examples">pipe-cd/examples: Examples to demonstrate how to use PipeCD</a></p>
 </li>
 </ul>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_locust"><a class="anchor" href="#_locust"></a>2. locust</h2>
-<div class="sectionbody">
-<div class="listingblock">
-<div class="title">locustfile.py</div>
-<div class="content">
-<pre class="highlight"><code class="language-python" data-lang="python">import random
-from locust import HttpUser, task, between
-
-class QuickstartUser(HttpUser):
-    wait_time = between(5, 9)
-
-    @task
-    def index_page(self):
-        self.client.get("/get")
-
-    @task(3)
-    def delay(self):
-        self.client.get("/delay/1")</code></pre>
-</div>
+<div class="sect2">
+<h3 id="_control_planeのインストール"><a class="anchor" href="#_control_planeのインストール"></a>1.2. Control Planeのインストール</h3>
+<div class="paragraph">
+<p>インストールはHelm 3が前提になっている。<br>
+quickstartではGitのリポジトリからチャートを取得してインストールする手順になっている。<br>
+Helmリポジトリも公開されており、そちらからインストールすることも可能。<br>
+手順としては以下の通り。</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code>docker run --rm --name locust_test -p 8089:8089 -v $PWD:/mnt/locust locustio/locust:latest -f /mnt/locust/locustfile.py</code></pre>
-</div>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><a href="https://locust.io/">Locust - A modern load testing framework</a></p>
-</li>
-<li>
-<p><a href="https://docs.locust.io/en/stable/index.html">Locust Documentation — Locust 1.1.1 documentation</a></p>
-</li>
-</ul>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_private_subnetでecrからecsタスクを起動する"><a class="anchor" href="#_private_subnetでecrからecsタスクを起動する"></a>3. Private SubnetでECRからECSタスクを起動する</h2>
-<div class="sectionbody">
-<div class="ulist">
-<ul>
-<li>
-<p>VPCエンドポイントを作成する</p>
-<div class="ulist">
-<ul>
-<li>
-<p>com.amazonaws.ap-northeast-1.ecr.api</p>
-</li>
-<li>
-<p>com.amazonaws.ap-northeast-1.ecr.dkr</p>
-</li>
-<li>
-<p>com.amazonaws.ap-northeast-1.logs</p>
-</li>
-<li>
-<p>com.amazonaws.ap-northeast-1.s3</p>
-</li>
-</ul>
-</div>
-</li>
-</ul>
-</div>
-<table class="tableblock frame-all grid-all stretch">
-<colgroup>
-<col style="width: 25%;">
-<col style="width: 25%;">
-<col style="width: 25%;">
-<col style="width: 25%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">エンドポイント</th>
-<th class="tableblock halign-left valign-top">ECS on EC2</th>
-<th class="tableblock halign-left valign-top">ECS on Fargate (~1.3.0)</th>
-<th class="tableblock halign-left valign-top">ECS on Fargate (1.4.0~)</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">com.amazonaws.ap-northeast-1.ecr.dkr</p></td>
-<td class="tableblock halign-left valign-top"></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">必要</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">必要</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">com.amazonaws.ap-northeast-1.ecr.api</p></td>
-<td class="tableblock halign-left valign-top"></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">不要</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">必要</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">com.amazonaws.ap-northeast-1.s3</p></td>
-<td class="tableblock halign-left valign-top"></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">必要</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">必要</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">com.amazonaws.ap-northeast-1.logs</p></td>
-<td class="tableblock halign-left valign-top"></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">awslogsログドライバー使用時に必要</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">awslogsログドライバー使用時に必要</p></td>
-</tr>
-</tbody>
-</table>
-<div class="ulist">
-<ul>
-<li>
-<p>VPCエンドポイント（インタフェース）の作成に必要なもの</p>
-<div class="ulist">
-<ul>
-<li>
-<p>VPC</p>
-</li>
-<li>
-<p>サブネット（アベイラビリティーゾーンにつき1つ）</p>
-</li>
-<li>
-<p>セキュリティグループ</p>
-</li>
-</ul>
-</div>
-</li>
-<li>
-<p>VPCエンドポイント（ゲートウェイ）の作成に必要なもの</p>
-<div class="ulist">
-<ul>
-<li>
-<p>VPC</p>
-</li>
-<li>
-<p>ルートテーブル（ルートが追加される）</p>
-</li>
-</ul>
-</div>
-</li>
-<li>
-<p>ポイント</p>
-<div class="ulist">
-<ul>
-<li>
-<p>元のサービスと同じホスト名でアクセスできるようにするため、プライベートDNS名を有効にする必要がある</p>
-<div class="ulist">
-<ul>
-<li>
-<p>VPCのプライベートDNS解決、DNSホスト名設定を有効にする</p>
-</li>
-<li>
-<p>VPCエンドポイントのプライベートDNS名設定を有効にする</p>
-</li>
-</ul>
-</div>
-</li>
-<li>
-<p>エンドポイントにアクセスできるように、エンドポイントに設定するセキュリティグループで443ポートを公開する必要がある</p>
-</li>
-<li>
-<p>s3向けのVPCエンドポイントを設定すると、VPCエンドポイントに紐づけられたルートテーブルが設定されたサブネット内では`yum update`が通らなくなる</p>
-</li>
-<li>
-<p>これは、リポジトリがs3上にあるためで、s3向けのVPCエンドポイントのポリシーでリポジトリのリソースへの許可が必要</p>
-</li>
-</ul>
-</div>
-</li>
-<li>
-<p><a href="https://docs.aws.amazon.com/ja_jp/AmazonECR/latest/userguide/vpc-endpoints.html">Amazon ECR インターフェイス VPC エンドポイント (AWS PrivateLink) - Amazon ECR</a></p>
-</li>
-</ul>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_ec2_aamazon_linux_2_初期設定"><a class="anchor" href="#_ec2_aamazon_linux_2_初期設定"></a>4. EC2 (Aamazon Linux 2) 初期設定</h2>
-<div class="sectionbody">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-bash" data-lang="bash"># upgrade package
-sudo yum upgrade
+<pre class="highlight"><code class="language-shell" data-lang="shell">#
+git clone https://github.com/pipe-cd/manifests.git
+cd manifests
 
-# install docker, git
-sudo yum install -y docker git
-
-# enable docker
-sudo systemctl start docker
-sudo systemctl enable docker
-
-# add ec2-user to docker group for executing command without sudo
-sudo usermod -a -G docker ec2-user
-
-# install docker-compose
-sudo curl -L "https://github.com/docker/compose/releases/download/1.26.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-sudo chmod +x /usr/local/bin/docker-compose</code></pre>
+kubectl create namespace pipecd
+helm install pipecd ./manifests/pipecd --namespace pipecd --values ./quickstart/control-plane-values.yaml</code></pre>
 </div>
 </div>
+<div class="paragraph">
+<p>これにより、pipecdネームスペース配下に以下のようなリソースが生成される。<br>
+quickstartではデータストアにMongoDB、ファイルストアにMinioをそれぞれ使うようになっており、
+それらのリソースも合わせて生成される。</p>
 </div>
+<div class="ulist">
+<ul>
+<li>
+<p>Secret</p>
+<div class="ulist">
+<ul>
+<li>
+<p>pipecd</p>
+<div class="ulist">
+<ul>
+<li>
+<p>暗号キーやMinioのアクセスキー、シークレットキーが含まれている。</p>
+</li>
+</ul>
 </div>
-<div class="sect1">
-<h2 id="_jdbctemplate_mysql"><a class="anchor" href="#_jdbctemplate_mysql"></a>5. JdbcTemplate + MySQL</h2>
-<div class="sectionbody">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;dependency&gt;
-    &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
-    &lt;artifactId&gt;spring-boot-starter-jdbc&lt;/artifactId&gt;
-&lt;/dependency&gt;
-&lt;dependency&gt;
-    &lt;groupId&gt;mysql&lt;/groupId&gt;
-    &lt;artifactId&gt;mysql-connector-java&lt;/artifactId&gt;
-&lt;/dependency&gt;</code></pre>
+</li>
+</ul>
 </div>
+</li>
+<li>
+<p>ConfigMap</p>
+<div class="ulist">
+<ul>
+<li>
+<p>pipecd</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Controle Planeの設定ファイル。データストア、ファイルストアの指定や、初期プロジェクトの設定が含まれている。</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>pipecd-gateway-envoy-config</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Gatewayとして使用しているEnvoyの設定ファイル。</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>Service</p>
+<div class="ulist">
+<ul>
+<li>
+<p>pipecd</p>
+</li>
+<li>
+<p>pipecd-gateway</p>
+</li>
+<li>
+<p>pipecd-api</p>
+</li>
+<li>
+<p>pipecd-web</p>
+</li>
+<li>
+<p>pipecd-cache</p>
+</li>
+<li>
+<p>pipecd-operator</p>
+</li>
+<li>
+<p>pipecd-mongodb</p>
+</li>
+<li>
+<p>pipecd-minio</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>Deployment</p>
+<div class="ulist">
+<ul>
+<li>
+<p>pipecd-gateway</p>
+</li>
+<li>
+<p>pipecd-api</p>
+</li>
+<li>
+<p>pipecd-web</p>
+</li>
+<li>
+<p>pipecd-cache</p>
+</li>
+<li>
+<p>pipecd-operator</p>
+</li>
+<li>
+<p>pipecd-mongodb</p>
+</li>
+<li>
+<p>pipecd-minio</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>以下の手順により、Web UIへのポートフォワードを設定する。</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">private JdbcTemplate jdbcTemplate;
-
-public List&lt;Person&gt; select() {
-    RowMapper&lt;Person&gt; personRowMapper = new BeanPropertyRowMapper&lt;&gt;(Person.class);
-    return jdbcTemplate.query("SELECT * FROM PERSON", personRowMapper);
-}</code></pre>
+<pre class="highlight"><code class="language-shell" data-lang="shell">kubectl port-forward svc/pipecd -n pipecd 8080:443</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>これにより、 <code><a href="http://localhost:8080" class="bare">http://localhost:8080</a></code> からWeb UIにアクセスできる。<br>
+Web UIにアクセスすると、初めにプロジェクトにサインインすることを要求される。<br>
+入力情報は以下の通り。<br>
+これらの入力情報はControl Plane設定用のConfigMapで定義されている。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Project Name : quickstart</p>
+</li>
+<li>
+<p>Username : hello-pipecd</p>
+</li>
+<li>
+<p>Password : hello-pipecd</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_environmentの作成"><a class="anchor" href="#_environmentの作成"></a>1.3. Environmentの作成</h3>
+<div class="paragraph">
+<p>Web UIからEnvironmentを作成する。<br>
+Environmentとは、後述のApplicationの論理グループであり、1つのプロジェクトが複数のEnvironmentを持つことができるようになっている。<br>
+Applicationは特定のEnvironmentに紐づけられる。<br>
+ここでは、 <code>dev</code> Environmentを作成する。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_pipedのインストール"><a class="anchor" href="#_pipedのインストール"></a>1.4. Pipedのインストール</h3>
+<div class="paragraph">
+<p>PipeCDではPipedというサービスを各クラスタにインストールし、そのPipedからApplicationのデプロイを行うというアーキテクチャになっている。<br>
+これにより、権限やクレデンシャルがクラスタ内に閉じるため管理しやすくなる、という意図があるようだ。<br>
+PipedはPipeCDのAPIのアドレスや、ApplicationのGitリポジトリの情報などを持ち、
+ClusterRoleが付与されたServiceAccountを紐付けることによりクラスタ内のデプロイ権限を持つ形になっている。</p>
+</div>
+<div class="paragraph">
+<p>Pipedのインストールにあたり、はじめにWeb UIでPipedを登録し、id、secret keyを生成する。</p>
+</div>
+<div class="paragraph">
+<p>次に、Pipedのインストールを行う。<br>
+このインストールもControl Plane同様、Helmを使用する。<br>
+PipedのチャートもControl Planeのチャートと同じリポジトリに含まれており、そのチャートを使用する手順になっている。</p>
+</div>
+<div class="paragraph">
+<p>マニフェストリポジトリ内にある、Piped向けのvaluesファイル <code>quickstart/piped-values.yaml</code> について、下記の箇所を編集する。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>FORKED_REPO_URL</code> を冒頭でforkしたexampleリポジトリのURLに書き換える。</p>
+</li>
+<li>
+<p><code>YOUR_PIPED_ID</code> をWeb UIでPipedを登録した際のidに置き換える。</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>その後、以下のコマンドにてPipedをインストールする。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-shell" data-lang="shell"># YOUR_PIPED_SECRET_KEY はWeb UIでPipedを登録した際のsecret keyに置き換える
+helm install piped ./manifests/piped --namespace pipecd --values ./quickstart/piped-values.yaml --set secret.pipedKey.data=YOUR_PIPED_SECRET_KEY</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>これにより、以下のリソースが生成される。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>ServiceAccount</p>
+<div class="ulist">
+<ul>
+<li>
+<p>piped</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>Secret</p>
+<div class="ulist">
+<ul>
+<li>
+<p>piped</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>ConfigMap</p>
+<div class="ulist">
+<ul>
+<li>
+<p>piped</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>ClusterRole</p>
+<div class="ulist">
+<ul>
+<li>
+<p>piped</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>ClusterRoleBinding</p>
+<div class="ulist">
+<ul>
+<li>
+<p>piped</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>Service</p>
+<div class="ulist">
+<ul>
+<li>
+<p>piped</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>Deployment</p>
+<div class="ulist">
+<ul>
+<li>
+<p>piped</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_applicationの登録"><a class="anchor" href="#_applicationの登録"></a>1.5. Applicationの登録</h3>
+<div class="paragraph">
+<p>Web UIからApplicationを登録する。<br>
+Applicationとは、DeploymentやServiceなどを含むアプリケーションのまとまりを指す。<br>
+Applicationの登録時に、Environment、Piped、リポジトリ、ディレクトリパスなどを指定する。<br>
+Environmentを指定することで、それに紐づくPipedを選択でき、Pipedを指定することで、それに紐づくリポジトリを選択できる。<br>
+ディレクトリパスも指定できるため、一つのリポジトリで複数のApplicationを管理することができる。</p>
+</div>
+<div class="paragraph">
+<p>アプリケーションの登録を行うと、最新の状態でApplicationデプロイが行われる。<br>
+デプロイのパイプラインは指定したディレクトリ直下にある <code>.pipe.yaml</code> で定義されている。<br>
+今回のquickstartでは以下の内容が定義されている。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-yaml" data-lang="yaml"># Deploy progressively with canary stragegy.
+apiVersion: pipecd.dev/v1beta1
+kind: KubernetesApp
+spec:
+  pipeline:
+    stages:
+      # Deploy the workloads of CANARY variant. In this case, the number of
+      # workload replicas of CANARY variant is 10% of the replicas number of PRIMARY variant.
+      - name: K8S_CANARY_ROLLOUT
+        with:
+          replicas: 10%
+      # Wait 10 seconds before going to the next stage.
+      - name: WAIT
+        with:
+          duration: 10s
+      # Update the workload of PRIMARY variant to the new version.
+      - name: K8S_PRIMARY_ROLLOUT
+      # Destroy all workloads of CANARY variant.
+      - name: K8S_CANARY_CLEAN</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_デプロイ"><a class="anchor" href="#_デプロイ"></a>1.6. デプロイ</h3>
+<div class="paragraph">
+<p>Applicationが登録された状態でGitリポジトリ上のマニフェストを更新すると、変更が自動で検知され、デプロイが行われる。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_まとめ"><a class="anchor" href="#_まとめ"></a>1.7. まとめ</h3>
+<div class="paragraph">
+<p>PipeCD触ってみた感想としては、以下の通り。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Web UI、Canary release、Automated Automated deployment Analysis、Manual Approvalなど、最初から必要な機能がかなり揃っている印象。</p>
+</li>
+<li>
+<p>Web UIが綺麗で分かりやすい。</p>
+</li>
+<li>
+<p>Pipedの登録や、Applicationの登録など、各種設定時にWeb UIの操作が必要なのは好みが分かれるところ。</p>
+</li>
+<li>
+<p>設定ファイルの書き方などKubernetesの仕組みを参考にしているが、Operator、CRDを使用している訳ではないので若干混乱する。</p>
+<div class="ulist">
+<ul>
+<li>
+<p>設定ファイルはyamlで書くし、フォーマットもKubernetesっぽいが、kubectl applyするわけではなく、ConfigMapでコンテナに渡している。</p>
+</li>
+<li>
+<p>operatorというモジュールがいるが、KubernetesのOperatorではない。</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
 </div>
 </div>
 </div>
