@@ -1,0 +1,186 @@
+:toc: left
+:toctitle: 目次
+:sectnums:
+:sectanchors:
+:sectinks:
+:chapter-label:
+
+= Technote - PipeCD
+
+== PipeCDのquickstartやってみた
+
+新しいGitOpsのCDツール、PipeCDが公開されたので、quickstartをやってみた。 +
+quickstartの手順については以下のページを参照している。
+
+* link:https://pipecd.dev/docs/quickstart/[Quickstart | PipeCD]
+
+=== Exampleリポジトリのfork
+
+まずはじめに、Exampleリポジトリを自身のアカウントにforkしておく。
+
+* link:https://github.com/pipe-cd/examples[pipe-cd/examples: Examples to demonstrate how to use PipeCD]
+
+=== Control Planeのインストール
+
+インストールはHelm 3が前提になっている。 +
+quickstartではGitのリポジトリからチャートを取得してインストールする手順になっている。 +
+Helmリポジトリも公開されており、そちらからインストールすることも可能。 +
+手順としては以下の通り。
+
+[source,shell]
+----
+#
+git clone https://github.com/pipe-cd/manifests.git
+cd manifests
+
+kubectl create namespace pipecd
+helm install pipecd ./manifests/pipecd --namespace pipecd --values ./quickstart/control-plane-values.yaml
+----
+
+これにより、pipecdネームスペース配下に以下のようなリソースが生成される。 +
+quickstartではデータストアにMongoDB、ファイルストアにMinioをそれぞれ使うようになっており、
+それらのリソースも合わせて生成される。
+
+* Secret
+** pipecd
+*** 暗号キーやMinioのアクセスキー、シークレットキーが含まれている。
+* ConfigMap
+** pipecd
+*** Controle Planeの設定ファイル。データストア、ファイルストアの指定や、初期プロジェクトの設定が含まれている。
+** pipecd-gateway-envoy-config
+*** Gatewayとして使用しているEnvoyの設定ファイル。
+* Service
+** pipecd
+** pipecd-gateway
+** pipecd-api
+** pipecd-web
+** pipecd-cache
+** pipecd-operator
+** pipecd-mongodb
+** pipecd-minio
+* Deployment
+** pipecd-gateway
+** pipecd-api
+** pipecd-web
+** pipecd-cache
+** pipecd-operator
+** pipecd-mongodb
+** pipecd-minio
+
+以下の手順により、Web UIへのポートフォワードを設定する。
+
+[source,shell]
+----
+kubectl port-forward svc/pipecd -n pipecd 8080:443
+----
+
+これにより、 `http://localhost:8080` からWeb UIにアクセスできる。 +
+Web UIにアクセスすると、初めにプロジェクトにサインインすることを要求される。 +
+入力情報は以下の通り。 +
+これらの入力情報はControl Plane設定用のConfigMapで定義されている。
+
+* Project Name : quickstart
+* Username : hello-pipecd
+* Password : hello-pipecd
+
+=== Environmentの作成
+
+Web UIからEnvironmentを作成する。 +
+Environmentとは、後述のApplicationの論理グループであり、1つのプロジェクトが複数のEnvironmentを持つことができるようになっている。 +
+Applicationは特定のEnvironmentに紐づけられる。 +
+ここでは、 `dev` Environmentを作成する。
+
+=== Pipedのインストール
+
+PipeCDではPipedというサービスを各クラスタにインストールし、そのPipedからApplicationのデプロイを行うというアーキテクチャになっている。 +
+これにより、権限やクレデンシャルがクラスタ内に閉じるため管理しやすくなる、という意図があるようだ。 +
+PipedはPipeCDのAPIのアドレスや、ApplicationのGitリポジトリの情報などを持ち、
+ClusterRoleが付与されたServiceAccountを紐付けることによりクラスタ内のデプロイ権限を持つ形になっている。
+
+Pipedのインストールにあたり、はじめにWeb UIでPipedを登録し、id、secret keyを生成する。
+
+次に、Pipedのインストールを行う。 +
+このインストールもControl Plane同様、Helmを使用する。 +
+PipedのチャートもControl Planeのチャートと同じリポジトリに含まれており、そのチャートを使用する手順になっている。
+
+マニフェストリポジトリ内にある、Piped向けのvaluesファイル `quickstart/piped-values.yaml` について、下記の箇所を編集する。
+
+* `FORKED_REPO_URL` を冒頭でforkしたexampleリポジトリのURLに書き換える。
+* `YOUR_PIPED_ID` をWeb UIでPipedを登録した際のidに置き換える。
+
+その後、以下のコマンドにてPipedをインストールする。
+
+[source,shell]
+----
+# YOUR_PIPED_SECRET_KEY はWeb UIでPipedを登録した際のsecret keyに置き換える
+helm install piped ./manifests/piped --namespace pipecd --values ./quickstart/piped-values.yaml --set secret.pipedKey.data=YOUR_PIPED_SECRET_KEY
+----
+
+これにより、以下のリソースが生成される。
+
+* ServiceAccount
+** piped
+* Secret
+** piped
+* ConfigMap
+** piped
+* ClusterRole
+** piped
+* ClusterRoleBinding
+** piped
+* Service
+** piped
+* Deployment
+** piped
+
+=== Applicationの登録
+
+Web UIからApplicationを登録する。 +
+Applicationとは、DeploymentやServiceなどを含むアプリケーションのまとまりを指す。 +
+Applicationの登録時に、Environment、Piped、リポジトリ、ディレクトリパスなどを指定する。 +
+Environmentを指定することで、それに紐づくPipedを選択でき、Pipedを指定することで、それに紐づくリポジトリを選択できる。 +
+ディレクトリパスも指定できるため、一つのリポジトリで複数のApplicationを管理することができる。
+
+アプリケーションの登録を行うと、最新の状態でApplicationデプロイが行われる。 +
+デプロイのパイプラインは指定したディレクトリ直下にある `.pipe.yaml` で定義されている。 +
+今回のquickstartでは以下の内容が定義されている。
+
+[source,yaml]
+----
+# Deploy progressively with canary stragegy.
+apiVersion: pipecd.dev/v1beta1
+kind: KubernetesApp
+spec:
+  pipeline:
+    stages:
+      # Deploy the workloads of CANARY variant. In this case, the number of
+      # workload replicas of CANARY variant is 10% of the replicas number of PRIMARY variant.
+      - name: K8S_CANARY_ROLLOUT
+        with:
+          replicas: 10%
+      # Wait 10 seconds before going to the next stage.
+      - name: WAIT
+        with:
+          duration: 10s
+      # Update the workload of PRIMARY variant to the new version.
+      - name: K8S_PRIMARY_ROLLOUT
+      # Destroy all workloads of CANARY variant.
+      - name: K8S_CANARY_CLEAN
+----
+
+
+=== デプロイ
+
+Applicationが登録された状態でGitリポジトリ上のマニフェストを更新すると、変更が自動で検知され、デプロイが行われる。
+
+
+=== まとめ
+
+PipeCD触ってみた感想としては、以下の通り。
+
+* Web UI、Canary release、Automated Automated deployment Analysis、Manual Approvalなど、最初から必要な機能がかなり揃っている印象。
+* Web UIが綺麗で分かりやすい。
+* Pipedの登録や、Applicationの登録など、各種設定時にWeb UIの操作が必要なのは好みが分かれるところ。
+* 設定ファイルの書き方などKubernetesの仕組みを参考にしているが、Operator、CRDを使用している訳ではないので若干混乱する。
+** 設定ファイルはyamlで書くし、フォーマットもKubernetesっぽいが、kubectl applyするわけではなく、ConfigMapでコンテナに渡している。
+** operatorというモジュールがいるが、KubernetesのOperatorではない。
