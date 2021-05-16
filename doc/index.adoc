@@ -6,24 +6,6 @@
 :chapter-label:
 
 = technote
-
-== Spring Boot
-
-link:spring-boot[Spring Boot]
-
-== Spring WebFlux
-
-link:spring-webflux[Spring WebFlux]
-
-== Kubernetes
-
-
-== AWS
-
-== asciidoc
-
-link:asciidoc[asciidoc]
-
 == memo
 
 link:memo[memo]

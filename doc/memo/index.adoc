@@ -4,6 +4,7 @@
 :sectanchors:
 :sectinks:
 :chapter-label:
+:source-highlighter: highlightjs
 
 = technote - memo
 

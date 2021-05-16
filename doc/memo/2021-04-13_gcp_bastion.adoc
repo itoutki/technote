@@ -1,0 +1,72 @@
+:toc: left
+:toctitle: 目次
+:sectnums:
+:sectanchors:
+:sectinks:
+:chapter-label:
+:source-highlighter: highlightjs
+
+= IAP TCP転送でSSH、RDP接続可能な踏み台サーバ（Ubuntu）を構築する
+
+* IAP TCP転送経由でのSSH、RDP接続を許可するためのファイアウォールルールを作成する
+** ソースIPアドレスの範囲として、「35.235.240.0/20」を指定する
+** SSH用の22番、RDP用の3389ポートを開けるように指定する
+** ターゲットタグを指定する
+
+[source, bash]
+----
+export GCP_PROJECT=myproject
+export GCP_ZONE=asia-northeast1-b
+export GCP_FIREWALL_RULE=ingress-from-iap
+export GCP_NETWORK=myvpc
+export GCP_NETWORK_TAG=nwiap
+export GCP_BASTION=bastion-01
+----
+
+[source, bash]
+----
+gcloud compute --project=nttd-platformtec firewall-rules create $GCP_FIREWALL_RULE \
+       --direction=INGRESS --priority=1000 --network=$GCP_NETWORK --action=ALLOW \
+       --rules=tcp:22,tcp:3389 --source-ranges=35.235.240.0/20 --target-tags=$GCP_NETWORK_TAG
+----
+
+* IAMユーザにIAPを使用するための権限を付与する
+** コンソールから操作する場合、「Cloud IAP -> IAPで保護されたトンネルユーザ」をユーザに付与する
+** CLIから操作する場合、「roles/iap.tunnelResourceAccessor」をユーザに付与する
+
+* パブリックIPアドレスを持たないcomputeインスタンスを作成する
+** ブートディスクのOSにはUbuntu 20.04 LTSを指定する
+** ファイアウォールルール作成時に指定したターゲットタグと同じタグをネットワークタグに指定する
+
+* CLIからIAP TCP転送でcomputeインスタンスにSSH接続する
+
+[source, bash]
+----
+gcloud beta compute ssh --zone $GCP_ZONE $GCP_BASTION --tunnel-through-iap --project $GCP_PROJECT
+----
+
+* computeインスタンス上でRDP接続を受け入れるためのセットアップを行う
+
+[source, bash]
+----
+# RDP接続用のユーザを作成する。パスワードも設定する。
+sudo useradd rdpuser
+# UbuntuのデスクトップGUIおよびRDPサービスであるxrdpをインストールし、xrdpを有効にする
+sudo apt -y install ubuntu-desktop xrdp
+sudo systemctl enable xrdp
+sudo systemctl start xrdp
+----
+
+* CLIからIAP TCP転送でRDP用のポート転送を行う
+** ローカルホストの任意のポート（ここでは13389ポート）をcomputeインスタンスの3389ポートに転送する
+
+[source, bash]
+----
+gcloud compute start-iap-tunnel $GCP_BASTION 3389 --local-host-port=localhost:13389 --zone=$GCP_ZONE --project $GCP_PROJECT
+----
+
+* RDPクライアントからローカルホストの前述のポートに対してRDP接続を行う
+
+== 参考
+
+* link:https://cloud.google.com/iap/docs/using-tcp-forwarding[TCP 転送での IAP の使用  |  Identity-Aware Proxy  |  Google Cloud]

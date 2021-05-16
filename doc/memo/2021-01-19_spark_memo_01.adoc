@@ -1,0 +1,71 @@
+:toc: left
+:toctitle: 目次
+:sectnums:
+:sectanchors:
+:sectinks:
+:chapter-label:
+:source-highlighter: highlightjs
+
+= technote - memo - Apache Spark メモ1
+
+== 環境構築
+
+=== sbtのインストール
+
+Scalaのプロジェクトをターミナルでビルドするために、Scala用のビルドツールであるsbtをインストールする。 +
+Macの場合、Homebrewを使ってインストールする。
+
+[source, shellscript]
+----
+brew install sbt
+----
+
+=== IntelliJ IDEAのインストール・セットアップ
+
+Scalaの開発を行う上で必要となるIDEのインストールセットアップを行う。
+ここでは、IntelliJ IDEAを利用する。
+その他の選択肢として、EclipseベースのScala IDE for Eclipseもあるが、
+2018で開発が止まっており、避けた方が良いと思われる。
+
+IntelliJ IDEAをインストールしたのち、Scala Pluginをインストールしておく。
+
+=== ローカルのSpark実行環境構築
+
+
+== Sparkアプリケーションの開発
+
+* sbtのビルドファイル `build.sbt` を作成
+* Spark 3.0.1はScala 2.12をサポートしているため、scalaVersionは2.12.x系にする。（Scalaの最新は2.13.xだが、それでは動かない）
+* libraryDependenciesにspark-sqlを追加
+
+[source, scala]
+----
+name := "SparkSample"
+
+version := "0.1"
+
+scalaVersion := "2.12.12"
+
+libraryDependencies += "org.apache.spark" %% "spark-sql" % "3.0.1"
+----
+
+* sbtを使い、Scalaプロジェクトをビルドしてjarファイルを作成
+
+[source, shellscript]
+----
+sbt package
+----
+
+
+[source, shellscript]
+----
+docker run --rm -d --name spark -v $PWD/target/scala-2.12:/mnt/workspace bitnami/spark:3-debian-10
+docker exec spark spark-submit --class "SimpleApp" --master local /mnt/workspace/sparksample_2.12-0.1.jar
+----
+val fields = schemaString.split(" ").map(fieldName => StructField(fieldName, StringType, nullable = true))
+
+== Reference
+
+* link:https://spark.apache.org/docs/latest/quick-start.html[Quick Start - Spark 3.0.1 Documentation]
+* link:https://docs.scala-lang.org/getting-started/index.html[Getting Started | Scala Documentation]
+* link:https://docs.scala-lang.org/getting-started/intellij-track/building-a-scala-project-with-intellij-and-sbt.html[Building a Scala Project with IntelliJ and sbt | Scala Documentation]
