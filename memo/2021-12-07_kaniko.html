@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 2.0.16">
-<title>IAP TCP転送でSSH、RDP接続可能な踏み台サーバ（Ubuntu）を構築する</title>
+<title>technote - memo - kaniko</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /*! Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
@@ -440,11 +440,11 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body class="article toc2 toc-left">
 <div id="header">
-<h1>IAP TCP転送でSSH、RDP接続可能な踏み台サーバ（Ubuntu）を構築する</h1>
+<h1>technote - memo - kaniko</h1>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
-<li><a href="#_参考">1. 参考</a></li>
+<li><a href="#_kanikoを試してみる">1. kanikoを試してみる</a></li>
 </ul>
 </div>
 </div>
@@ -454,130 +454,139 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="ulist">
 <ul>
 <li>
-<p>IAP TCP転送経由でのSSH、RDP接続を許可するためのファイアウォールルールを作成する</p>
+<p>kanikoとは</p>
 <div class="ulist">
 <ul>
 <li>
-<p>ソースIPアドレスの範囲として、「35.235.240.0/20」を指定する</p>
+<p>コンテナ上でコンテナイメージをビルドするためのツール</p>
 </li>
 <li>
-<p>SSH用の22番、RDP用の3389ポートを開けるように指定する</p>
+<p>dockerデーモンに依存せずにコンテナイメージをビルドできる</p>
 </li>
 <li>
-<p>ターゲットタグを指定する</p>
+<p>Dockerfileを元にしてビルドを行う</p>
+</li>
+<li>
+<p>コンテナイメージをビルドし、コンテナイメージレジストリへのプッシュを行う</p>
 </li>
 </ul>
 </div>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">export GCP_PROJECT=myproject
-export GCP_ZONE=asia-northeast1-b
-export GCP_FIREWALL_RULE=ingress-from-iap
-export GCP_NETWORK=myvpc
-export GCP_NETWORK_TAG=nwiap
-export GCP_BASTION=bastion-01</code></pre>
-</div>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">gcloud compute --project=nttd-platformtec firewall-rules create $GCP_FIREWALL_RULE \
-       --direction=INGRESS --priority=1000 --network=$GCP_NETWORK --action=ALLOW \
-       --rules=tcp:22,tcp:3389 --source-ranges=35.235.240.0/20 --target-tags=$GCP_NETWORK_TAG</code></pre>
-</div>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>IAMユーザにIAPを使用するための権限を付与する</p>
-<div class="ulist">
-<ul>
-<li>
-<p>コンソールから操作する場合、「Cloud IAP &#8594; IAPで保護されたトンネルユーザ」をユーザに付与する</p>
-</li>
-<li>
-<p>CLIから操作する場合、「roles/iap.tunnelResourceAccessor」をユーザに付与する</p>
-</li>
-</ul>
-</div>
-</li>
-<li>
-<p>パブリックIPアドレスを持たないcomputeインスタンスを作成する</p>
-<div class="ulist">
-<ul>
-<li>
-<p>ブートディスクのOSにはUbuntu 20.04 LTSを指定する</p>
-</li>
-<li>
-<p>ファイアウォールルール作成時に指定したターゲットタグと同じタグをネットワークタグに指定する</p>
-</li>
-</ul>
-</div>
-</li>
-<li>
-<p>CLIからIAP TCP転送でcomputeインスタンスにSSH接続する</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">gcloud beta compute ssh --zone $GCP_ZONE $GCP_BASTION --tunnel-through-iap --project $GCP_PROJECT</code></pre>
-</div>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>computeインスタンス上でRDP接続を受け入れるためのセットアップを行う</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># RDP接続用のユーザを作成する。パスワードも設定する。
-sudo useradd rdpuser
-# UbuntuのデスクトップGUIおよびRDPサービスであるxrdpをインストールし、xrdpを有効にする
-sudo apt -y install ubuntu-desktop xrdp
-sudo systemctl enable xrdp
-sudo systemctl start xrdp</code></pre>
-</div>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>CLIからIAP TCP転送でRDP用のポート転送を行う</p>
-<div class="ulist">
-<ul>
-<li>
-<p>ローカルホストの任意のポート（ここでは13389ポート）をcomputeインスタンスの3389ポートに転送する</p>
-</li>
-</ul>
-</div>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">gcloud compute start-iap-tunnel $GCP_BASTION 3389 --local-host-port=localhost:13389 --zone=$GCP_ZONE --project $GCP_PROJECT</code></pre>
-</div>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>RDPクライアントからローカルホストの前述のポートに対してRDP接続を行う</p>
 </li>
 </ul>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_参考"><a class="anchor" href="#_参考"></a>1. 参考</h2>
+<h2 id="_kanikoを試してみる"><a class="anchor" href="#_kanikoを試してみる"></a>1. kanikoを試してみる</h2>
 <div class="sectionbody">
 <div class="ulist">
 <ul>
 <li>
-<p><a href="https://cloud.google.com/iap/docs/using-tcp-forwarding">TCP 転送での IAP の使用  |  Identity-Aware Proxy  |  Google Cloud</a></p>
+<p>dockerhubにコンテナイメージをプッシュするために、dockerhubのログイン情報を設定する</p>
+<div class="ulist">
+<ul>
+<li>
+<p>dockerhubのユーザ名とパスワードをbase64でエンコードする</p>
+</li>
+<li>
+<p>base64でエンコードした文字列を含むjsonファイルを作成する</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">echo $DOCKERHUB_USER:$DOCKERHUB_PASSWORD | base64</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-json hljs" data-lang="json">{
+	"auths": {
+		"https://index.docker.io/v1/": {
+			"auth": "xxxxxxxxxxxxxxx"
+		}
+	}
+}</code></pre>
+</div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Dockerfileやソースコードをコンテナにマウントする場合</p>
+<div class="ulist">
+<ul>
+<li>
+<p>作業ディレクトリにDockerfileとビルドに必要なファイル（ソースコードなど）を配置する</p>
+</li>
+<li>
+<p>作業ディレクトリを <code>/workspace</code> にマウントする</p>
+</li>
+<li>
+<p>config.jsonを <code>/kaniko/.docker/config.json</code> に読み取り専用でマウントする</p>
+</li>
+<li>
+<p>実行時引数 <code>--dockerfile</code> でDockerfile名を指定する</p>
+</li>
+<li>
+<p>実行時引数 <code>--destination</code> でプッシュするコンテナイメージレジストリ・コンテナイメージ名・タグを指定する</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">docker run -it --rm \
+  -v $PWD:/workspace
+  -v $PWD/config.json:/kaniko/.docker/config.json:ro \
+  gcr.io/kaniko-project/executor:latest \
+    --dockerfile=Dockerfile \
+    --destination=itoutki/kaniko-sample:from-kaniko \
+    --cache=true</code></pre>
+</div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Dockerfileやソースコードをkanikoの中でGithubから取得する場合</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Githubのパーソナルトークンを環境変数 <code>GIT_TOKEN</code> に設定する</p>
+</li>
+<li>
+<p>コンテナ実行時に環境変数 <code>GIT_TOKEN</code> を指定する</p>
+</li>
+<li>
+<p>実行時引数 <code>--context</code> でGitリポジトリを指定する</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">export GIT_TOKEN=xxxxx
+
+docker run -it --rm \
+  -e GIT_TOKEN=$GIT_TOKEN \
+  -v $PWD/config.json:/kaniko/.docker/config.json:ro \
+  gcr.io/kaniko-project/executor:latest \
+    --dockerfile=Dockerfile \
+    --context=git://github.com/itoutki/kaniko-sample.git \
+    --destination=itoutki/kaniko-sample:from-kaniko-with-git \
+    --cache=true</code></pre>
+</div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://github.com/GoogleContainerTools/kaniko">GoogleContainerTools/kaniko: Build Container Images In Kubernetes</a></p>
 </li>
 </ul>
 </div>
