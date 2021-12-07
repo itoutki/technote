@@ -1,0 +1,76 @@
+:toc: left
+:toctitle: 目次
+:sectnums:
+:sectanchors:
+:sectinks:
+:chapter-label:
+:source-highlighter: highlightjs
+
+= technote - memo - kaniko
+
+* kanikoとは
+** コンテナ上でコンテナイメージをビルドするためのツール
+** dockerデーモンに依存せずにコンテナイメージをビルドできる
+** Dockerfileを元にしてビルドを行う
+** コンテナイメージをビルドし、コンテナイメージレジストリへのプッシュを行う
+
+== kanikoを試してみる
+
+* dockerhubにコンテナイメージをプッシュするために、dockerhubのログイン情報を設定する
+** dockerhubのユーザ名とパスワードをbase64でエンコードする
+** base64でエンコードした文字列を含むjsonファイルを作成する
+
+[source]
+----
+echo $DOCKERHUB_USER:$DOCKERHUB_PASSWORD | base64
+----
+
+[source, json]
+----
+{
+	"auths": {
+		"https://index.docker.io/v1/": {
+			"auth": "xxxxxxxxxxxxxxx"
+		}
+	}
+}
+----
+
+* Dockerfileやソースコードをコンテナにマウントする場合
+** 作業ディレクトリにDockerfileとビルドに必要なファイル（ソースコードなど）を配置する
+** 作業ディレクトリを `/workspace` にマウントする
+** config.jsonを `/kaniko/.docker/config.json` に読み取り専用でマウントする
+** 実行時引数 `--dockerfile` でDockerfile名を指定する
+** 実行時引数 `--destination` でプッシュするコンテナイメージレジストリ・コンテナイメージ名・タグを指定する
+
+[source]
+----
+docker run -it --rm \
+  -v $PWD:/workspace
+  -v $PWD/config.json:/kaniko/.docker/config.json:ro \
+  gcr.io/kaniko-project/executor:latest \
+    --dockerfile=Dockerfile \
+    --destination=itoutki/kaniko-sample:from-kaniko \
+    --cache=true
+----
+
+* Dockerfileやソースコードをkanikoの中でGithubから取得する場合
+** Githubのパーソナルトークンを環境変数 `GIT_TOKEN` に設定する
+** コンテナ実行時に環境変数 `GIT_TOKEN` を指定する
+** 実行時引数 `--context` でGitリポジトリを指定する
+
+[source]
+----
+export GIT_TOKEN=xxxxx
+
+docker run -it --rm \
+  -e GIT_TOKEN=$GIT_TOKEN \
+  -v $PWD/config.json:/kaniko/.docker/config.json:ro \
+  gcr.io/kaniko-project/executor:latest \
+    --dockerfile=Dockerfile \
+    --context=git://github.com/itoutki/kaniko-sample.git \
+    --destination=itoutki/kaniko-sample:from-kaniko-with-git \
+    --cache=true
+----
+
+* link:https://github.com/GoogleContainerTools/kaniko[GoogleContainerTools/kaniko: Build Container Images In Kubernetes]
